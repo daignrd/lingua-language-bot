@@ -51,6 +51,12 @@ The bot's target language and the user's locale are configured via environment v
 
 `/call`, `/endcall`, `/shadow`, `/morning`, `/mission`, `/cheatsheet`, `/grammar`, `/new`, `/compact`, `/model`, `/usage`, `/setup`, `/status`
 
+## Anki Pipeline
+
+Beyond the bot, the repo includes a file-based Anki card creation workflow under `Anki/`. Drop study materials (class notes, textbook PDFs, photos, audio) into `Anki/inbox/` and ask Claude Code to process them — it'll extract cards into `Anki/cards/*.md` using the `anki-cards` skill (`.agents/skills/anki-cards/SKILL.md`). See [Anki/README.md](./Anki/README.md) for the canonical card format and tag conventions.
+
+This is a Claude Code workflow, not a bot feature — cards live in your repo as plain markdown, ready to import into Anki.
+
 ## Environment Variables
 
 All required — see `src/config.ts` and `.env.example`.

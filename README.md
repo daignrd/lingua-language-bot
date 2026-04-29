@@ -16,6 +16,7 @@ Once running, your bot:
 - 📝 **Corrects your grammar in real time** when you write or speak in the target language.
 - 📍 **Gives you cheat sheets** for specific situations — `/cheatsheet doctor appointment` and you'll get the phrases you need before walking in.
 - 🧠 **Remembers everything** — your level, your interests, your life. Grows smarter the more you use it.
+- 🃏 **Builds Anki cards from your study materials** — drop class notes, textbook PDFs, audio recordings, or teacher corrections into `Anki/inbox/` and ask Claude Code to extract cards. See [Anki/README.md](Anki/README.md).
 
 ---
 
@@ -140,6 +141,7 @@ You can also just **send voice messages** for free-form practice. The bot transc
 
 - [SETUP.md](SETUP.md) — full technical setup reference (database SQL, manual install, deployment)
 - [agents.md](agents.md) — architecture overview for developers / AI assistants editing the project
+- [Anki/README.md](Anki/README.md) — how the Anki card pipeline works (drop materials in, get cards out)
 
 ---
 
