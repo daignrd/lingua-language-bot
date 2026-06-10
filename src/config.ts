@@ -26,6 +26,11 @@ export const config = {
         morningHour: parseInt(getEnvOrDefault('MORNING_HOUR', '9'), 10),
         timezoneOffsetHours: parseInt(getEnvOrDefault('MORNING_TIMEZONE_OFFSET', '0'), 10),
     },
+    news: {
+        // RSS 2.0 / Atom feed in the target language (e.g. Tagesschau for
+        // German, ANSA for Italian). Optional — /news warns if unset.
+        rssUrl: getEnvOrDefault('NEWS_RSS_URL', ''),
+    },
     telegram: {
         botToken: getEnv('TELEGRAM_BOT_TOKEN'),
         allowedUserId: parseInt(getEnv('TELEGRAM_ALLOWED_USER_ID'), 10),

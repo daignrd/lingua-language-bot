@@ -1,4 +1,4 @@
--- Gravity Claw: Knowledge Graph Architecture Schema
+-- Lingua Language Bot: Knowledge Graph Architecture Schema
 -- Paste this entire script into the Supabase SQL Editor and click "Run", or apply via migration
 
 -- 1. Knowledge Graph Nodes

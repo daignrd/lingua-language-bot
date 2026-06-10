@@ -9,6 +9,9 @@ import { clearWorkingMemory } from '../services/supabase.ts';
 import { executeOptimizeMemory } from '../tools/memory_manager.ts';
 import { startCallSession, endCallSession, isInCallSession, getCallTimeRemaining } from '../services/session.ts';
 import { addGrammarPoint, listGrammarPoints, removeGrammarPoint } from '../services/grammar.ts';
+import { fetchHeadlines } from '../services/news.ts';
+import { startMockSession, submitMockAnswer, isInMockSession, abortMockSession, getCurrentQuestion, getMockProgress, dialogueToNarration } from '../services/mock_session.ts';
+import { getMockStats } from '../services/supabase.ts';
 
 const LANG = config.bot.targetLanguage;
 const LEVEL = config.bot.levelSystem;
@@ -242,6 +245,96 @@ bot.command('grammar', async (ctx) => {
     await ctx.reply('Usage:\n/grammar list — see all active points\n/grammar add [pattern] | [meaning] | [notes]\n/grammar remove [pattern]');
 });
 
+// /news [feed-url] — Daily authentic news reading drill in the target language
+bot.command('news', async (ctx) => {
+    const feedUrl = (ctx.match as string)?.trim() || undefined;
+    await ctx.replyWithChatAction('typing');
+    try {
+        const items = await fetchHeadlines(feedUrl, 8);
+        // Pick from the top few for variety without going stale.
+        const item = items[Math.floor(Math.random() * Math.min(items.length, 5))];
+
+        const prompt = `Create today's news reading drill using the news-reading skill. Here is a real ${LANG} headline and summary — use it verbatim as the source and do NOT invent any facts beyond it:\n\nTITLE: ${item.title}\nSUMMARY: ${item.summary}\n\nProduce the formatted reading drill now.`;
+        const response = await processMessage(prompt);
+        await ctx.reply(response);
+
+        // Read the summary aloud for listening practice.
+        if (item.summary) {
+            await ctx.replyWithChatAction('record_voice');
+            try {
+                const voice = await textToSpeech(item.summary);
+                await ctx.replyWithVoice(new InputFile(voice, 'news.mp3'));
+            } catch (ttsErr) {
+                console.error('News TTS failed:', ttsErr);
+            }
+        }
+    } catch (error) {
+        console.error('Error in /news:', error);
+        await ctx.reply(`Failed to fetch the news.\n${error instanceof Error ? error.message : ''}`);
+    }
+});
+
+// /mock — Timed listening mock set (5 questions, one-shot audio, scored & saved)
+bot.command('mock', async (ctx) => {
+    if (isInMockSession()) {
+        await ctx.reply('📝 A mock set is already in progress. Reply with a number to answer the current question, or /endmock to stop.');
+        return;
+    }
+    await ctx.reply(`📝 Building a timed ${LANG} listening set (5 questions). One-shot audio, no replays — exam conditions. One moment...`);
+    await ctx.replyWithChatAction('typing');
+    try {
+        await startMockSession(5);
+        await deliverMockQuestion(ctx);
+    } catch (error) {
+        console.error('Error in /mock:', error);
+        abortMockSession();
+        await ctx.reply(`Failed to generate the mock set — try again in a moment.\n${error instanceof Error ? error.message : ''}`);
+    }
+});
+
+// /endmock — Abort an in-progress mock set
+bot.command('endmock', async (ctx) => {
+    await ctx.reply(abortMockSession() ? '🛑 Mock set ended. No score saved.' : 'No mock set is in progress.');
+});
+
+// /mockstats — Show recent mock listening scores and trend
+bot.command('mockstats', async (ctx) => {
+    await ctx.replyWithChatAction('typing');
+    const stats = await getMockStats(10);
+    if (stats.length === 0) {
+        await ctx.reply('No mock results recorded yet (or the `mock_results` table isn\'t set up in Supabase). Run /mock to log your first score.');
+        return;
+    }
+    const lines = stats.map(s => {
+        const pct = Math.round((s.correct / s.total) * 100);
+        const day = s.created_at ? s.created_at.split('T')[0] : '';
+        return `${day}: ${s.correct}/${s.total} (${pct}%)`;
+    });
+    const avg = Math.round(stats.reduce((a, s) => a + s.correct / s.total, 0) / stats.length * 100);
+    await ctx.reply(`📈 Mock listening — last ${stats.length}\n\n${lines.join('\n')}\n\nAverage: ${avg}%`);
+});
+
+/**
+ * Sends the current mock question (scene + options as text, dialogue as audio).
+ */
+async function deliverMockQuestion(ctx: any): Promise<void> {
+    const q = getCurrentQuestion();
+    if (!q) return;
+    const { current, total } = getMockProgress();
+    const optionsText = q.options.map((o, i) => `${i + 1}. ${o}`).join('\n');
+
+    await ctx.reply(`🎧 Question ${current}/${total}\n\n${q.scene}\n\n${optionsText}\n\nListen once, then reply with a number.`);
+
+    await ctx.replyWithChatAction('record_voice');
+    try {
+        const voice = await textToSpeech(dialogueToNarration(q.dialogue));
+        await ctx.replyWithVoice(new InputFile(voice, `mock-q${current}.mp3`));
+    } catch (error) {
+        console.error('Mock dialogue TTS failed:', error);
+        await ctx.reply(`(Audio generation failed — transcript shown instead)\n\n${q.transcript}`);
+    }
+}
+
 // /morning — Combined morning briefing
 bot.command('morning', async (ctx) => {
     await ctx.replyWithChatAction('typing');
@@ -272,13 +365,24 @@ bot.command('morning', async (ctx) => {
  * Also used by the auto-scheduler.
  */
 export async function runMorningRoutine(): Promise<string> {
+    // Pull a real headline for the news section if a feed is configured
+    // (best-effort — never block the briefing).
+    let newsSection = '';
+    try {
+        const items = await fetchHeadlines(undefined, 5);
+        const item = items[Math.floor(Math.random() * items.length)];
+        newsSection = `\n\n4. **📰 Today's News**: Here is a real ${LANG} news item — TITLE: "${item.title}" — SUMMARY: "${item.summary}". Present it briefly: show the ${LANG} headline, give 3-4 key vocabulary words with meanings, then ask ONE short comprehension question in ${LANG}. Keep this section tight. Do not invent facts beyond the title and summary.`;
+    } catch (error) {
+        // No feed configured or fetch failed — silently skip the news section.
+    }
+
     const prompt = `Generate the Morning Briefing. This is a combined routine with these sections — do ALL of them in one response:
 
 1. **📝 Grammar Drill**: Use the pick_grammar_drill tool to get today's grammar point from my rotation. Generate ONE natural example sentence in ${LANG} using that grammar pattern. The sentence should be relevant to my life. Show the sentence, its breakdown, and a translation. Format it so I can shadow it. If no grammar points are saved yet, skip this section and tell me to add some with /grammar.
 
 2. **🎯 Today's Mission**: Pick a useful ${LEVEL} word in ${LANG}. Give me a specific real-life challenge to use it today. Include a fill-in-the-blank or translation drill.
 
-3. **🎧 Shadowing Clip**: Generate a short natural ${LANG} passage (2-3 sentences) at ${LEVEL} level. Topic: pick something relevant to my life or daily situations in ${LOC}. Include a quick vocab list for any harder words.
+3. **🎧 Shadowing Clip**: Generate a short natural ${LANG} passage (2-3 sentences) at ${LEVEL} level. Topic: pick something relevant to my life or daily situations in ${LOC}. Include a quick vocab list for any harder words.${newsSection}
 
 Keep the total response concise and scannable — this needs to be readable on a phone screen while having coffee. Use the emoji section headers exactly as shown above.`;
 
@@ -288,6 +392,27 @@ Keep the total response concise and scannable — this needs to be readable on a
 bot.on('message:text', async (ctx) => {
     const userMessage = ctx.message.text;
     console.log(`Received text message: ${userMessage}`);
+
+    // If a mock listening set is running, treat plain text as an answer.
+    if (isInMockSession()) {
+        const result = await submitMockAnswer(userMessage);
+        if (!result) {
+            await ctx.reply('Please reply with the number of your answer, or /endmock to stop.');
+            return;
+        }
+        const verdict = result.isCorrect ? '✅ Correct!' : `❌ Incorrect. The answer was ${result.correctAnswer}.`;
+        await ctx.reply(`${verdict}\n\n🎙️ ${result.question.transcript}\n\n💡 ${result.question.explanation}`);
+
+        if (result.finished && result.score) {
+            const { correct, total, durationMs } = result.score;
+            const mins = Math.floor(durationMs / 60000);
+            const secs = Math.round((durationMs % 60000) / 1000);
+            await ctx.reply(`🏁 Mock complete!\nScore: ${correct}/${total}  ·  Time: ${mins}m ${secs}s\n\nSaved to your history — /mockstats to see your trend.`);
+        } else {
+            await deliverMockQuestion(ctx);
+        }
+        return;
+    }
 
     await ctx.replyWithChatAction('typing');
 

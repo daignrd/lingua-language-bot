@@ -1,4 +1,4 @@
--- Gravity Claw: Tri-Partite Memory Architecture Schema
+-- Lingua Language Bot: Tri-Partite Memory Architecture Schema
 -- Paste this entire script into the Supabase SQL Editor and click "Run"
 
 -- 1. Enable the pgvector extension for semantic search
@@ -54,3 +54,13 @@ AS $$
   ORDER BY episodic_memory.embedding <=> query_embedding
   LIMIT match_count;
 $$;
+
+-- 6. Mock Exam Scores (durable progress tracking for /mock and /mockstats)
+CREATE TABLE IF NOT EXISTS mock_results (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  kind text NOT NULL,
+  total int NOT NULL,
+  correct int NOT NULL,
+  duration_ms bigint,
+  created_at timestamptz DEFAULT now()
+);

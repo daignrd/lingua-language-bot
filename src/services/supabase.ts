@@ -286,6 +286,56 @@ export async function getEntityRelations(entity: string): Promise<any[]> {
     return relations;
 }
 
+// --- MOCK EXAM SCORES (durable progress tracking) ---
+//
+// Requires a one-time table (see supabase_schema.sql):
+//
+//   create table if not exists mock_results (
+//     id uuid primary key default gen_random_uuid(),
+//     kind text not null,
+//     total int not null,
+//     correct int not null,
+//     duration_ms bigint,
+//     created_at timestamptz default now()
+//   );
+//
+// Inserts fail gracefully (logged, not thrown) if the table is absent, so the
+// /mock drill still works before the migration is applied.
+
+export interface MockResult {
+    kind: string;
+    total: number;
+    correct: number;
+    duration_ms: number;
+    created_at?: string;
+}
+
+export async function saveMockResult(kind: string, total: number, correct: number, durationMs: number): Promise<boolean> {
+    const { error } = await supabase
+        .from('mock_results')
+        .insert({ kind, total, correct, duration_ms: durationMs });
+
+    if (error) {
+        console.error('Failed to save mock result (is the mock_results table created?):', error.message);
+        return false;
+    }
+    return true;
+}
+
+export async function getMockStats(limit: number = 10): Promise<MockResult[]> {
+    const { data, error } = await supabase
+        .from('mock_results')
+        .select('kind, total, correct, duration_ms, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+    if (error) {
+        console.error('Failed to fetch mock stats:', error.message);
+        return [];
+    }
+    return data as MockResult[];
+}
+
 /**
  * Pings the database to prevent it from pausing due to inactivity on the free tier.
  * A simple read query qualifies as activity.

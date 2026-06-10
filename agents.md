@@ -49,7 +49,7 @@ The bot's target language and the user's locale are configured via environment v
 
 ## Commands
 
-`/call`, `/endcall`, `/shadow`, `/morning`, `/mission`, `/cheatsheet`, `/grammar`, `/new`, `/compact`, `/model`, `/usage`, `/setup`, `/status`
+`/call`, `/endcall`, `/shadow`, `/morning`, `/mission`, `/cheatsheet`, `/news`, `/mock`, `/endmock`, `/mockstats`, `/grammar`, `/new`, `/compact`, `/model`, `/usage`, `/setup`, `/status`
 
 ## Anki Pipeline
 
