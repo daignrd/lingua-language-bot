@@ -2,9 +2,9 @@
  * News fetcher — pulls authentic target-language news from any RSS 2.0 feed.
  *
  * Generic: the feed is configured per deployment via the NEWS_RSS_URL env var
- * (e.g. Tagesschau for German, ANSA for Italian). The /news command can also
- * take a one-off feed URL as an argument. The agent scaffolds readings/vocab/
- * comprehension on top (see skills/news-reading.md).
+ * (e.g. Tagesschau for German, ANSA for Italian, NHK for Japanese). The /news
+ * command can also take a one-off feed URL as an argument. The agent scaffolds
+ * readings/vocab/comprehension on top (see skills/news-reading.md).
  */
 
 import { config } from '../config.ts';

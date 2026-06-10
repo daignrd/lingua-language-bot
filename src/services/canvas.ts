@@ -1,20 +1,23 @@
-import { WebSocketServer, WebSocket } from 'ws';
-
-const WSS_PORT = 8080;
-const wss = new WebSocketServer({ port: WSS_PORT });
+import { WebSocket } from 'ws';
 
 let activeClients: WebSocket[] = [];
 
-wss.on('connection', (ws) => {
-    console.log('New Live Canvas client connected');
+/**
+ * Handles incoming connection upgrades from the unified WebSocket server.
+ */
+export function handleCanvasConnection(ws: WebSocket) {
+    console.log('[Canvas] New Live Canvas client connected.');
     activeClients.push(ws);
 
     ws.on('close', () => {
-        console.log('Live Canvas client disconnected');
+        console.log('[Canvas] Live Canvas client disconnected.');
         activeClients = activeClients.filter(c => c !== ws);
     });
-});
+}
 
+/**
+ * Pushes HTML content to all active Live Canvas clients.
+ */
 export function pushToCanvas(htmlContent: string) {
     if (activeClients.length === 0) {
         throw new Error('No active Canvas clients connected. Open the Canvas UI in a browser first.');
@@ -28,5 +31,3 @@ export function pushToCanvas(htmlContent: string) {
         }
     }
 }
-
-console.log(`Live Canvas WebSocket Server running on ws://localhost:${WSS_PORT}`);

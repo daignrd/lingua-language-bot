@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS core_facts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     fact_key TEXT UNIQUE NOT NULL,    -- e.g., "user_name", "user_company"
-    fact_value TEXT NOT NULL,         -- e.g., "Daigan", "Laser Digital"
+    fact_value TEXT NOT NULL,         -- e.g., "Alex", "Acme Corp"
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

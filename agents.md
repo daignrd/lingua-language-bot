@@ -8,9 +8,10 @@ A configurable, single-user Telegram bot for AI-driven language learning. Set yo
 - **Bot framework:** grammy (Telegram)
 - **LLM:** Google Gemini via OpenRouter (`src/agent/`)
 - **Database:** Supabase (PostgreSQL + pgvector for semantic search)
-- **TTS:** ElevenLabs (`src/services/elevenlabs.ts`)
+- **TTS:** Google Gemini native TTS (`src/services/gemini_tts.ts`)
 - **STT:** Groq Whisper (`src/services/groq.ts`)
 - **Vision:** Google Gemini (`src/services/gemini.ts`)
+- **Live Tutor:** Gemini Multimodal Live API relayed to a Telegram Mini App (`src/services/live_tutor.ts`, `src/server.ts`, `frontend/`)
 - **Deployment:** Docker on Railway (or anywhere Node runs)
 
 ## Project Structure
@@ -22,9 +23,11 @@ src/
   bot/index.ts        — All Telegram command handlers (the central hub)
   agent/index.ts      — Agentic loop with tool calling, system prompt assembly
   tools/              — Tool definitions (memory, episodic, grammar, graph, search, etc.)
-  services/           — External API integrations (Supabase, ElevenLabs, Groq, Gemini, etc.)
+  services/           — External API integrations (Supabase, Gemini TTS, Groq, Gemini, live tutor, news, etc.)
+  server.ts           — Express + WebSocket server (serves the mini app, relays the live tutor)
 skills/               — Markdown behavioral instructions loaded into system prompt every turn
 soul.md               — Core personality and behavioral rules
+frontend/             — Live Tutor Telegram Mini App (Vite) — built to frontend/dist at deploy
 ```
 
 ## Configuration
@@ -44,12 +47,12 @@ The bot's target language and the user's locale are configured via environment v
 - **bot/index.ts** is the central hub — all Telegram commands and message handlers live here
 - **agent/index.ts** assembles the system prompt from soul.md + skills + memory context, runs a multi-turn tool-calling loop, and substitutes placeholders
 - **Memory is tri-partite:** working (chat logs in Supabase), declarative (core facts), episodic (RAG vectors via pgvector)
-- **Voice flow:** user voice → Groq Whisper transcription → agent response → ElevenLabs TTS → voice reply + text transcript
+- **Voice flow:** user voice → Groq Whisper transcription → agent response → Gemini TTS → voice reply + text transcript
 - **Skills** in `skills/` are loaded every turn — the agent picks which to follow based on context (active call session, shadowing, etc.)
 
 ## Commands
 
-`/call`, `/endcall`, `/shadow`, `/morning`, `/mission`, `/cheatsheet`, `/news`, `/mock`, `/endmock`, `/mockstats`, `/grammar`, `/new`, `/compact`, `/model`, `/usage`, `/setup`, `/status`
+`/tutor`, `/call`, `/endcall`, `/shadow`, `/morning`, `/mission`, `/cheatsheet`, `/news`, `/mock`, `/endmock`, `/mockstats`, `/grammar`, `/new`, `/compact`, `/model`, `/usage`, `/setup`, `/status`
 
 ## Anki Pipeline
 

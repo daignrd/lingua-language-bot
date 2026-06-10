@@ -7,7 +7,7 @@
 import { Bot } from 'grammy';
 import { config } from '../config.ts';
 import { runMorningRoutine } from '../bot/index.ts';
-import { textToSpeech } from './elevenlabs.ts';
+import { textToSpeech } from './gemini_tts.ts';
 import { InputFile } from 'grammy';
 
 let schedulerTimer: ReturnType<typeof setTimeout> | null = null;

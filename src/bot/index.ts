@@ -1,8 +1,8 @@
-import { Bot, InputFile } from 'grammy';
+import { Bot, InputFile, InlineKeyboard } from 'grammy';
 import { config } from '../config.ts';
 import { processMessage, getUsageStats } from '../agent/index.ts';
 import { transcribeAudio } from '../services/groq.ts';
-import { textToSpeech } from '../services/elevenlabs.ts';
+import { textToSpeech, textToSpeechDialogue } from '../services/gemini_tts.ts';
 import { analyzeImage, analyzeDocument } from '../services/gemini.ts';
 import { executeCommitEpisode } from '../tools/episodic.ts';
 import { clearWorkingMemory } from '../services/supabase.ts';
@@ -10,7 +10,7 @@ import { executeOptimizeMemory } from '../tools/memory_manager.ts';
 import { startCallSession, endCallSession, isInCallSession, getCallTimeRemaining } from '../services/session.ts';
 import { addGrammarPoint, listGrammarPoints, removeGrammarPoint } from '../services/grammar.ts';
 import { fetchHeadlines } from '../services/news.ts';
-import { startMockSession, submitMockAnswer, isInMockSession, abortMockSession, getCurrentQuestion, getMockProgress, dialogueToNarration } from '../services/mock_session.ts';
+import { startMockSession, submitMockAnswer, isInMockSession, abortMockSession, getCurrentQuestion, getMockProgress } from '../services/mock_session.ts';
 import { getMockStats } from '../services/supabase.ts';
 
 const LANG = config.bot.targetLanguage;
@@ -71,6 +71,20 @@ bot.command('usage', async (ctx) => {
 });
 
 // ─── Language Learning Commands ──────────────────────────────────────────────
+
+// /tutor — Open the real-time live tutoring classroom (Telegram Mini App)
+bot.command('tutor', async (ctx) => {
+    const webAppUrl = config.webApp.url;
+    if (!webAppUrl) {
+        await ctx.reply('The live tutor mini app is not configured. Set WEBAPP_URL to your deployed app URL to enable /tutor.');
+        return;
+    }
+    const keyboard = new InlineKeyboard().webApp('🏫 Open Classroom', webAppUrl);
+    await ctx.reply(`🎓 *Welcome to your live ${LANG} tutor session!*\n\nTap below to enter the classroom. Use headphones for the best audio experience.`, {
+        reply_markup: keyboard,
+        parse_mode: 'Markdown',
+    });
+});
 
 // /call [minutes] [topic] — Start a target-language-only voice call session
 bot.command('call', async (ctx) => {
@@ -327,7 +341,7 @@ async function deliverMockQuestion(ctx: any): Promise<void> {
 
     await ctx.replyWithChatAction('record_voice');
     try {
-        const voice = await textToSpeech(dialogueToNarration(q.dialogue));
+        const voice = await textToSpeechDialogue(q.dialogue);
         await ctx.replyWithVoice(new InputFile(voice, `mock-q${current}.mp3`));
     } catch (error) {
         console.error('Mock dialogue TTS failed:', error);

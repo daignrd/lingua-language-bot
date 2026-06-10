@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lingua — Live Tutor</title>
+    <!-- Modern Outfit & Inter fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+    <div class="glass-container">
+        <!-- Header -->
+        <header class="app-header">
+            <h1 class="logo">Lingua <span>Tutor</span></h1>
+            <div id="connection-status" class="status disconnected">Disconnected</div>
+        </header>
+
+        <!-- Tutor Voice / Visualizer Canvas -->
+        <section class="visualizer-section">
+            <div class="tutor-avatar-container">
+                <div id="tutor-avatar" class="tutor-avatar idle">
+                    <span class="avatar-glow"></span>
+                    <span class="avatar-inner">🤖</span>
+                </div>
+            </div>
+            <!-- Dynamic wave visualizer using HTML5 canvas -->
+            <canvas id="wave-canvas" width="300" height="80"></canvas>
+            <p id="tutor-status-text" class="tutor-status-text">Ready to connect</p>
+        </section>
+
+        <!-- Real-Time Text Transcript -->
+        <section class="transcript-section">
+            <h2>Tutor Transcript</h2>
+            <div id="transcript-box" class="transcript-box">
+                <p class="placeholder-text">Press "Start Session" to connect to your tutor...</p>
+            </div>
+        </section>
+
+        <!-- Shadowing Drill Assistant (shown dynamically) -->
+        <section id="shadowing-section" class="shadowing-section hidden">
+            <h2>Active Shadowing Drill</h2>
+            <div class="drill-card">
+                <div class="drill-target" id="drill-ja"></div>
+                <div class="drill-reading" id="drill-furi"></div>
+                <div class="drill-translation" id="drill-en"></div>
+                <div class="drill-feedback" id="drill-feedback">Listening for your repetition...</div>
+            </div>
+        </section>
+
+        <!-- Controls Footer -->
+        <footer class="app-controls">
+            <button id="btn-toggle-session" class="btn btn-primary">Start Session</button>
+            <button id="btn-mute" class="btn btn-secondary hidden">Mute Mic</button>
+        </footer>
+    </div>
+
+    <!-- Telegram WebApp SDK (auto-loads environment variables inside Telegram WebView) -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script type="module" src="./src/main.ts"></script>
+</body>
+</html>

@@ -69,9 +69,8 @@ All of these have generous free tiers — most users won't pay anything:
 | Telegram (BotFather) | Hosts your bot | Telegram → message [@BotFather](https://t.me/BotFather) → `/newbot` |
 | Telegram (your user ID) | Restricts the bot to only you | Message [@userinfobot](https://t.me/userinfobot) — it'll reply with your ID |
 | OpenRouter | Powers the AI brain | [openrouter.ai](https://openrouter.ai) |
-| Google AI Studio | Image / document understanding | [aistudio.google.com](https://aistudio.google.com) |
+| Google AI Studio (Gemini) | Voice (TTS), live `/tutor` classroom, image / document understanding | [aistudio.google.com](https://aistudio.google.com) |
 | Groq | Speech-to-text (Whisper) | [console.groq.com](https://console.groq.com) |
-| ElevenLabs | Text-to-speech (the bot's voice) | [elevenlabs.io](https://elevenlabs.io) — pick a voice that speaks your language well |
 | Supabase | Memory storage | [supabase.com](https://supabase.com) |
 
 Claude Code can guide you through each one if you ask.

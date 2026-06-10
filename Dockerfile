@@ -1,5 +1,8 @@
 FROM node:22-alpine
 
+# Install ffmpeg for audio format conversion (Gemini TTS PCM -> OGG)
+RUN apk add --no-cache ffmpeg
+
 # Set working directory
 WORKDIR /app
 
@@ -8,8 +11,10 @@ COPY package*.json ./
 RUN npm ci
 
 # Copy the rest of the application code
-# This explicitly includes mcp.json, soul.md, and all src files
 COPY . .
+
+# Build the Live Tutor mini app static assets (frontend/dist)
+RUN npm run build
 
 # Start the bot
 CMD ["npm", "start"]

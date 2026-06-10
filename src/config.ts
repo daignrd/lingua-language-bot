@@ -28,7 +28,7 @@ export const config = {
     },
     news: {
         // RSS 2.0 / Atom feed in the target language (e.g. Tagesschau for
-        // German, ANSA for Italian). Optional — /news warns if unset.
+        // German, ANSA for Italian, NHK for Japanese). Optional.
         rssUrl: getEnvOrDefault('NEWS_RSS_URL', ''),
     },
     telegram: {
@@ -40,13 +40,17 @@ export const config = {
     },
     gemini: {
         apiKey: getEnv('GEMINI_API_KEY'),
+        // Native Gemini TTS (voice replies, shadowing, news) + Live API (the /tutor mini app).
+        ttsModel: getEnvOrDefault('GEMINI_TTS_MODEL', 'gemini-3.1-flash-tts-preview'),
+        liveModel: getEnvOrDefault('GEMINI_LIVE_MODEL', 'models/gemini-3.1-flash-live-preview'),
+        voiceName: getEnvOrDefault('GEMINI_VOICE_NAME', 'Aoede'),
     },
     groq: {
         apiKey: getEnv('GROQ_API_KEY'),
     },
-    elevenLabs: {
-        apiKey: getEnv('ELEVENLABS_API_KEY'),
-        voiceId: process.env.ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM', // Rachel
+    webApp: {
+        // Public URL of the deployed Live Tutor mini app (Telegram WebApp button in /tutor).
+        url: getEnvOrDefault('WEBAPP_URL', ''),
     },
     supabase: {
         url: getEnv('SUPABASE_URL'),

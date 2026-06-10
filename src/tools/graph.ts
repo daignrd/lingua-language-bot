@@ -8,7 +8,7 @@ export const upsertGraphNodeToolDefinition = {
         parameters: {
             type: 'object',
             properties: {
-                entity: { type: 'string', description: 'The name of the entity, e.g., "Daigan" or "OpenAI"' },
+                entity: { type: 'string', description: 'The name of the entity, e.g., "Alex" or "OpenAI"' },
                 type: { type: 'string', description: 'The type of the entity, e.g., "Person", "Organization", "Concept"' },
                 properties: { type: 'string', description: 'An optional JSON string of properties to attach to the node.' }
             },
