@@ -53,6 +53,38 @@ let nextPlayTime = 0;
 let activeSources: AudioBufferSourceNode[] = [];
 let audioAnalyser: AnalyserNode | null = null;
 
+// Screen Wake Lock — keeps the phone screen on during a session so the user
+// doesn't have to keep tapping it. Released when the session ends.
+let wakeLock: any = null;
+
+async function requestWakeLock() {
+    try {
+        if ('wakeLock' in navigator) {
+            wakeLock = await (navigator as any).wakeLock.request('screen');
+            wakeLock.addEventListener?.('release', () => console.log('[WakeLock] released'));
+            console.log('[WakeLock] Screen wake lock active.');
+        }
+    } catch (err) {
+        console.warn('[WakeLock] Could not acquire screen wake lock:', err);
+    }
+}
+
+async function releaseWakeLock() {
+    try {
+        if (wakeLock) {
+            await wakeLock.release();
+            wakeLock = null;
+        }
+    } catch (_) { /* already released */ }
+}
+
+// Wake locks are auto-released when the tab is hidden — re-acquire on return.
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && isSessionActive && !wakeLock) {
+        requestWakeLock();
+    }
+});
+
 // Initialize Telegram WebApp if available
 if (window.Telegram?.WebApp) {
     window.Telegram.WebApp.ready();
@@ -407,6 +439,9 @@ function connectSession() {
         // Clear placeholder text
         transcriptBox.innerHTML = '';
 
+        // Keep the screen awake for the duration of the session
+        requestWakeLock();
+
         // NOW start mic streaming — the socket is open and ready to receive audio
         try {
             startMicStreaming();
@@ -458,6 +493,7 @@ function connectSession() {
 function disconnectSession() {
     isConnected = false;
     isSessionActive = false;
+    releaseWakeLock();
     stopMicrophoneRecording();
     stopAllAudioPlayback();
 
